@@ -1,4 +1,5 @@
 const UserModel = require("../Models/User");
+const jwt=require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
 
@@ -23,7 +24,7 @@ const signup=async(req,res)=>{
 }
 const login=async(req,res)=>{
     try{
-        const {name,email,password}=req.body;
+        const {email,password}=req.body;
         const user=await UserModel.findOne({email});
         const errorMsg='Authentication Failed';
         if(!user){
@@ -35,8 +36,20 @@ const login=async(req,res)=>{
             return res.status(403)
             .json({message:console.errorMsg,success:false});
         }
-        res.status(201)
-        .json({message:"Signup successful",success:true})
+const jwtToken=jwt.sign(
+    {email:user.email,_id:user._id},
+    process.env.JWT_SECRET,
+    {expiresIN:'24h'}
+)
+
+        res.status(200)
+        .json({
+            message:"Login successful",
+            success:true,
+            jwtToken,
+            email,
+            name:user.name
+        })
     }catch(err){
         res.status(500)
         .json({message:"Server Error",success:false})
